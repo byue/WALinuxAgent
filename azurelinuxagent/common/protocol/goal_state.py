@@ -58,7 +58,10 @@ class GoalState(object):
 
         """
         uri = GOAL_STATE_URI.format(wire_client.get_endpoint())
+        logger.info('GoalState: goaltstate query uri={0}', uri)
+
         self.xml_text = wire_client.fetch_config(uri, wire_client.get_header())
+        logger.info('GoalState config:\n{0}', self.xml_text)
         xml_doc = parse_doc(self.xml_text)
 
         self.incarnation = findtext(xml_doc, "Incarnation")
@@ -75,6 +78,7 @@ class GoalState(object):
         GoalState.ContainerID = self.container_id
 
         if not (full_goal_state or base_incarnation is not None and self.incarnation != base_incarnation):
+            logger.info('GoalState: Returning early, self.incarnation != base_incarnation, self.incarnation={0}, base_incarnation={1}', self.incarnation, base_incarnation), 
             self.hosting_env = None
             self.shared_conf = None
             self.certs = None
@@ -85,32 +89,43 @@ class GoalState(object):
         logger.info('Fetching new goal state [incarnation {0}]', self.incarnation)
 
         uri = findtext(xml_doc, "HostingEnvironmentConfig")
+        logger.info('HostingEnvironmentConfigUri:{0}', uri)
         xml_text = wire_client.fetch_config(uri, wire_client.get_header())
+        logger.info('HostingEnvironmentConfig:\n{0}', xml_text)
         self.hosting_env = HostingEnv(xml_text)
 
         uri = findtext(xml_doc, "SharedConfig")
+        logger.info('SharedConfigUri:{0}', uri)
         xml_text = wire_client.fetch_config(uri, wire_client.get_header())
+        logger.info('SharedConfig:\n{0}', xml_text)
         self.shared_conf = SharedConfig(xml_text)
 
         uri = findtext(xml_doc, "Certificates")
         if uri is None:
             self.certs = None
         else:
+            logger.info('CertificatesUri:{0}', uri)
             xml_text = wire_client.fetch_config(uri, wire_client.get_header_for_cert())
+            logger.info('Certificates:\n{0}', xml_text)
             self.certs = Certificates(xml_text)
 
         uri = findtext(xml_doc, "ExtensionsConfig")
+        
         if uri is None:
             self.ext_conf = ExtensionsConfig(None)
         else:
+            logger.info('ExtensionsConfigUri:{0}', uri)
             xml_text = wire_client.fetch_config(uri, wire_client.get_header())
+            logger.info('ExtensionsConfig:\n{0}', xml_text)
             self.ext_conf = ExtensionsConfig(xml_text)
 
         uri = findtext(container, "RemoteAccessInfo")
         if uri is None:
             self.remote_access = None
         else:
+            logger.info('RemoteAccessInfoUri:{0}', uri)
             xml_text = wire_client.fetch_config(uri, wire_client.get_header_for_cert())
+            logger.info('RemoteAccessInfoUri:\n{0}', xml_text)
             self.remote_access = RemoteAccess(xml_text)
 
     @staticmethod

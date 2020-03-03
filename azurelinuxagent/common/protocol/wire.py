@@ -716,18 +716,24 @@ class WireClient(object):
         for retry in range(1, max_retry + 1):
             try:
                 if refresh_type == WireClient._UpdateType.HostPlugin:
+                    logger.info("_update_from_goal_state: refresh type is WireClient._UpdateType.HostPlugin. fetch_goal_state")
                     goal_state = GoalState.fetch_goal_state(self)
                     self._update_host_plugin(goal_state.container_id, goal_state.role_config_name)
                     return
 
                 if self._goal_state is None or refresh_type == WireClient._UpdateType.GoalStateForced:
+                    logger.info("_update_from_goal_state: Goal state is None or refresh type is WireClient._UpdateType.GoalStateForced, fetch_full_goal_state")
                     new_goal_state = GoalState.fetch_full_goal_state(self)
                 else:
+                    logger.info("_update_from_goal_state: Refresh type is WireClient._UpdateType.GoalState, fetch_full_goal_state_if_incarnation_different_than")
                     new_goal_state = GoalState.fetch_full_goal_state_if_incarnation_different_than(self, self._goal_state.incarnation)
 
                 if new_goal_state is not None:
+                    logger.info("_update_from_goal_state: new_goal_state is not None")
                     self._goal_state = new_goal_state
+                    logger.info("_update_from_goal_state: saving goal state")
                     self._save_goal_state()
+                    logger.info("_update_from_goal_state: updating host plugin, containerId={0}, roleConfig={1}", new_goal_state.container_id, new_goal_state.role_config_name)
                     self._update_host_plugin(new_goal_state.container_id, new_goal_state.role_config_name)
 
                 return
