@@ -140,10 +140,13 @@ class EnvHandler(object):
 
             self.archive_history()
 
-            if firewall_set_event and not self.firewall_set_event.isSet():
+            if self.firewall_set_event and not self.firewall_set_event.isSet():
                 self.firewall_set_event.set()
 
             time.sleep(5)
+
+        if self.firewall_set_event and not self.firewall_set_event.isSet():
+            self.firewall_set_event.set()
 
     def handle_hostname_update(self):
         curr_hostname = socket.gethostname()
