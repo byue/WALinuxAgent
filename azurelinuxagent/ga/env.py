@@ -46,8 +46,8 @@ MAXIMUM_CACHED_FILES = 50
 ARCHIVE_INTERVAL = datetime.timedelta(hours=24)
 
 
-def get_env_handler():
-    return EnvHandler()
+def get_env_handler(firewall_set_event):
+    return EnvHandler(firewall_set_event)
 
 
 class EnvHandler(object):
@@ -58,7 +58,8 @@ class EnvHandler(object):
     Monitor scsi disk.
     If new scsi disk found, set timeout
     """
-    def __init__(self):
+    def __init__(self, firewall_set_event=None):
+        self.firewall_set_event = firewall_set_event
         self.osutil = get_osutil()
         self.dhcp_handler = get_dhcp_handler()
         self.protocol_util = None
@@ -138,6 +139,9 @@ class EnvHandler(object):
             self.handle_dhclient_restart()
 
             self.archive_history()
+
+            if firewall_set_event and not self.firewall_set_event.isSet():
+                self.firewall_set_event.set()
 
             time.sleep(5)
 

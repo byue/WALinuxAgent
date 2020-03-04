@@ -29,6 +29,7 @@ import stat
 import subprocess
 import sys
 import time
+import threading
 import traceback
 import uuid
 import zipfile
@@ -248,7 +249,16 @@ class UpdateHandler(object):
         """
 
         try:
+            #
+            # Configure firewall before initial goal state fetch.
+            # Ensure we block if we need to reset firewall rules
+            #
             logger.info(u"Agent {0} is running as the goal state agent", CURRENT_AGENT)
+            firewall_set_event = threading.Event()
+            from azurelinuxagent.ga.env import get_env_handler
+            env_thread = get_env_handler(firewall_set_event)
+            env_thread.run()
+            firewall_set_event.wait()
 
             #
             # Fetch the goal state one time; some components depend on information provided by the goal state and this
@@ -271,10 +281,6 @@ class UpdateHandler(object):
             from azurelinuxagent.ga.monitor import get_monitor_handler
             monitor_thread = get_monitor_handler()
             monitor_thread.run()
-
-            from azurelinuxagent.ga.env import get_env_handler
-            env_thread = get_env_handler()
-            env_thread.run()
 
             from azurelinuxagent.ga.exthandlers import get_exthandlers_handler, migrate_handler_state
             exthandlers_handler = get_exthandlers_handler(protocol)
