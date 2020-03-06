@@ -43,6 +43,7 @@ import azurelinuxagent.common.utils.restutil as restutil
 import azurelinuxagent.common.utils.textutil as textutil
 from azurelinuxagent.common.cgroupconfigurator import CGroupConfigurator
 
+from azurelinuxagent.common.protocol.goal_state import TRANSPORT_CERT_FILE_NAME
 from azurelinuxagent.common.event import add_event, initialize_event_logger_vminfo_common_parameters, elapsed_milliseconds, WALAEventOperation
 from azurelinuxagent.common.exception import ResourceGoneError, UpdateError
 from azurelinuxagent.common.future import ustr
@@ -265,7 +266,13 @@ class UpdateHandler(object):
             # call ensures the required info is initialized (e.g telemetry depends on the container ID.)
             #
             protocol = self.protocol_util.get_protocol()
-            protocol.update_goal_state()
+            transport_cert_file = os.path.join(conf.get_lib_dir(),
+                                               TRANSPORT_CERT_FILE_NAME)
+            # Check that transport certs exists, may be missing for agents migrating away from MetadataServer protocol.
+            if os.path.isfile(transport_cert_file):
+                protocol.update_goal_state()
+            else:
+                protocol.detect()
 
             initialize_event_logger_vminfo_common_parameters(protocol)
 
