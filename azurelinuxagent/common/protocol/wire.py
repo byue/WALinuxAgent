@@ -1010,12 +1010,13 @@ class WireClient(object):
             msg = "Falling back to direct upload: {0}".format(ustr(e))
             self.report_status_event(msg, is_success=True)
 
-        try:
-            if self.status_blob.upload(ext_conf.status_upload_blob):
-                return
-        except Exception as e:
-            msg = "Exception uploading status blob: {0}".format(ustr(e))
-            self.report_status_event(msg, is_success=False)
+        for status_uri in ext_conf.status_upload_blob.split("|"):
+            try:
+                if self.status_blob.upload(status_uri):
+                    return
+            except Exception as e:
+                msg = "Exception uploading status blob: {0}".format(ustr(e))
+                self.report_status_event(msg, is_success=False)
 
         raise ProtocolError("Failed to upload status blob via either channel")
 
